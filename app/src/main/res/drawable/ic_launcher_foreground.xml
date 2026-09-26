@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Kinetic text logo / letter 'T' with motion trail -->
+    <path
+        android:fillColor="#FF818CF8"
+        android:fillAlpha="0.3"
+        android:pathData="M26,30 h56 v12 h-22 v36 h-12 v-36 h-22 z" />
+    <path
+        android:fillColor="#FFA5B4FC"
+        android:fillAlpha="0.6"
+        android:pathData="M29,33 h50 v10 h-19 v34 h-12 v-34 h-19 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M32,36 h44 v8 h-16 v32 h-12 v-32 h-16 z" />
+    <!-- Kinetic sparkles / film clapper accent -->
+    <path
+        android:fillColor="#FF38BDF8"
+        android:pathData="M78,28 l2,4 l4,2 l-4,2 l-2,4 l-2,-4 l-4,-2 l4,-2 z" />
+    <path
+        android:fillColor="#FFF43F5E"
+        android:pathData="M30,76 l1.5,3 l3,1.5 l-3,1.5 l-1.5,3 l-1.5,-3 l-3,-1.5 l3,-1.5 z" />
+</vector>

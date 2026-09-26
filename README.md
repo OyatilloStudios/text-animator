@@ -1,62 +1,82 @@
-# 📱 Text Animator PRO — Mobile & Android (APK)
+# 📱 Text Animator PRO — Android Application
 
-A modern mobile web & native Android application for creating kinetic text animations, motion graphics, and video rendering directly on smart devices.
+A mobile kinetic typography studio built with Kotlin & Jetpack Compose (and available as mobile web via Vite). It enables creating animated title clips, kinetic typography videos, and motion graphics with rich entrance, exit, and loop effects.
 
 ---
 
-## 🏗 Arxitektura (Mobile Architecture)
+## 🚀 Features
 
-Loyiha smartfonlar va Android operatsion tizimi uchun to'liq moslashtirilgan:
+- **Kinetic Typography Engine**: Real-time rendering of 30+ kinetic motion effects:
+  - **Entrance Effects**: Blur In, Typewriter, Slide Up/Down/Left/Right, Slide Fade, Scale In, Tracking In, Flip X/Y, Rotate In, Elastic In, Glitch In, Fly In, Vortex In.
+  - **Kinetic Loops**: Wave, Wiggle, Float, Pulse, Font Shuffle, Glow Flicker, Marquee, Pendulum, Color Cycle, Blink, Skew Wave, Spin Loop.
+  - **Exit Effects**: Blur Out, Scale Out, Slide Out, Rotate Out, Glitch Out, Fly Out, Vortex Out.
+- **Stage & Aspect Ratio**: Multi-ratio support for modern social media:
+  - 9:16 (Shorts, Reels, Stories)
+  - 16:9 (Landscape YouTube, Video)
+  - 1:1 (Square Posts)
+  - Touch-based drag-and-drop to position text layers anywhere on canvas.
+- **Interactive Multi-layer Timeline**:
+  - Scrubbing slider, play/pause controls, timecode display (00:00.0).
+  - Multi-layer visual track spans showing active intervals.
+- **CapCut-style 6-Tab Bottom Panel**:
+  - ✏️ **Text**: Content editing, inspirational quotes, text alignment, preset grid coordinates.
+  - 🎨 **Style**: Typography fonts, font size, weight, letter spacing, line height, text color, highlight background, stroke outline, drop shadows.
+  - ✨ **Effects**: Entrance, Loop, and Exit effect pickers, speed multiplier, intensity controls.
+  - ⏱️ **Timing**: Start delay, lifespan duration, in/out transition durations.
+  - 🖼️ **Background**: Solid color, dynamic angle linear gradients, transparent checkerboard, media backgrounds.
+  - 📑 **Layers**: Add, reorder (up/down), duplicate, and delete text layers.
+- **Export Studio**:
+  - Resolution selector (HD 720p, Full HD 1080p, 4K UHD).
+  - Frame rate options (24, 25, 30, 60 FPS).
+  - Live progress encoding modal.
+
+---
+
+## 🏗 Android Project Architecture
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│             React + TypeScript + Capacitor               │
-│  - UI: Mobile Stage (9:16 / 16:9 / 1:1), Touch Timeline  │
-│  - Navigation: CapCut-style 6-tab Mobile Bottom Panel    │
-│  - Touch Engine: Finger Drag & Scrubbing                 │
-│  - Motion Engine: Anime.js (30+ kinetic animations)      │
-│  - Renderer: In-Device WebCodecs (MP4 & WebM)            │
-└────────────────────────────┬─────────────────────────────┘
-                             │ Build
-┌────────────────────────────▼─────────────────────────────┐
-│                 Android Native (.APK)                    │
-│  - Capacitor Native Bridge                               │
-│  - In-device Gallery Export                              │
-│  - Cloud CI/CD (GitHub Actions — 0MB on local PC)        │
-└──────────────────────────────────────────────────────────┘
+/
+├── app/
+│   ├── build.gradle.kts                   # Android module Gradle configuration
+│   ├── proguard-rules.pro
+│   └── src/main/
+│       ├── AndroidManifest.xml            # App manifest & permissions
+│       ├── res/
+│       │   ├── values/                    # strings.xml, colors.xml, themes.xml
+│       │   ├── drawable/                  # Vector adaptive launcher icons
+│       │   └── mipmap-*/                  # Density-specific raster icons
+│       └── java/com/example/textanimator/
+│           ├── MainActivity.kt            # Edge-to-edge entry point
+│           ├── model/
+│           │   ├── AnimationEffect.kt     # Enums for effects & categories
+│           │   ├── TextConfig.kt          # Layer state data class
+│           │   └── Presets.kt             # Fonts, inspirations, palettes
+│           ├── ui/
+│           │   ├── theme/                 # Dark M3 color scheme, typography
+│           │   ├── components/
+│           │   │   ├── StageView.kt       # Kinetic canvas renderer & gestures
+│           │   │   ├── TimelineView.kt    # Scrubber & layer tracks
+│           │   │   ├── BottomPanel.kt     # 6-tab styling & settings panel
+│           │   │   ├── EffectPickerSheet.kt # Modal effect selector
+│           │   │   ├── ColorPickerSheet.kt  # Palette selector
+│           │   │   └── ExportDialog.kt    # Resolution & export progress
+│           │   ├── screens/
+│           │   │   └── TextAnimatorScreen.kt # Root studio composable
+│           │   └── viewmodel/
+│           │       └── TextAnimatorViewModel.kt # StateFlow & 60fps playback engine
+├── build.gradle.kts                       # Root project build script
+├── settings.gradle.kts                    # Settings script with dependency resolution
+├── gradle.properties
+└── gradle/libs.versions.toml             # Version Catalog
 ```
 
 ---
 
-## 📁 Loyiha Tuzilishi
+## 🛠 Building the Application
 
-- `App.tsx` — Mobil interfeys, 9:16 standart vertikal format, yuqori menyu va eksport oynasi
-- `components/Stage.tsx` — Sensor ekran (Touch Drag) orqali matnlarni erkin surish sahnasi
-- `components/Timeline.tsx` — Barmoq bilan vaqtni surish (Touch Scrubbing) va qatlamlarni cho'zish
-- `components/MobileBottomPanel.tsx` — CapCut uslubidagi 6 ta mobil boshqaruv bo'limi:
-  - ✏️ **Matn** — Shriftlar, o'lcham, qalinlik, tekislash, tezkor joylashuv
-  - 🎨 **Uslub** — Rang, fon shaffofligi, hoshiya (stroke), tashqi va ichki soyalar
-  - ✨ **Effekt** — 30+ kinetik, kirish va chiqish animatsiyalari
-  - ⏱️ **Vaqt** — Qatlam davomiyligi, boshlanish vaqti, tezlik va intensivlik
-  - 🖼️ **Fon** — Gradient, rangli, shaffof yoki media fon
-  - ⚙️ **Qatlam** — Qatlamlarni tartiblash va boshqarish
-- `components/AnimatedText.tsx` — Anime.js kinetik dvigateli
-- `services/renderer.ts` — Telefonda to'g'ridan-to'g'ri MP4 render qiluvchi WebCodecs mexanizmi
-- `capacitor.config.json` — Android konfiguratsiyasi
-- `.github/workflows/build-apk.yml` — GitHub Actions orqali bulutda avtomatik APK yig'ish
-
----
-
-## 🚀 Qanday Qilib APK Olinadi? (GitHub Actions orqali)
-
-Ushbu loyiha kompyuteringiz xotirasidan **0 MB** sarflagan holda GitHub bulutida avtomatik `.apk` chiqarib beradi:
-
-1. Ushbu loyihani GitHub omboriga push qiling:
-   ```bash
-   git push origin main
-   ```
-2. GitHub sahifangizga kiring: [https://github.com/OyatilloStudios/text-animator](https://github.com/OyatilloStudios/text-animator)
-3. Yuqoridagi **"Actions"** tabiga bosing.
-4. **"Build Android APK (Cloud - 0MB Disk on PC)"** ishlayotganini ko'rasiz.
-5. Jarayon tugagach (taxminan 2 daqiqa), **"Artifacts"** bo'limida tayyor **`TextAnimator-PRO-Android-APK`** fayli paydo bo'ladi.
-6. Uni to'g'ridan-to'g'ri telefoningizga yuklab olib, o'rnatasiz!
+### Native Android
+To compile and assemble the Android APK using Gradle:
+```bash
+gradle assembleDebug
+```
+The output APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.

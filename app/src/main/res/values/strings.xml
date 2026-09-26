@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Text Animator</string>
+    <string name="export">Export</string>
+    <string name="add_layer">Add Layer</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="rewind">Rewind</string>
+    <string name="tab_text">Text</string>
+    <string name="tab_style">Style</string>
+    <string name="tab_effects">Effects</string>
+    <string name="tab_timing">Timing</string>
+    <string name="tab_background">Background</string>
+    <string name="tab_layers">Layers</string>
+    <string name="aspect_ratio">Aspect Ratio</string>
+    <string name="export_video">Export Video</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+</resources>
