@@ -1,18 +1,12 @@
-import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Flow } from 'flow-sdk';
-import { Icon } from './components/Icon';
-import { Sidebar } from './components/Sidebar';
 import { Stage } from './components/Stage';
 import { Timeline } from './components/Timeline';
+import { MobileBottomPanel } from './components/MobileBottomPanel';
 import { TextConfig, MediaAsset, GOOGLE_FONTS_URL } from './types';
-import { renderVideo, renderVideoPython } from './services/renderer';
+import { renderVideoMobile } from './services/renderer';
 import { timeController } from './services/TimeController';
-
-const MemoizedSidebar = memo(Sidebar);
-
-const INJECTED_STYLE_ID = 'typeoverlays-global-styles';
-const INJECTED_FONT_ID = 'typeoverlays-material-symbols';
-const INJECTED_BODY_FONT_ID = 'typeoverlays-google-sans';
+import { Download, Plus, Film, X, Check, Loader2 } from 'lucide-react';
 
 function useGlobalStyles() {
     useEffect(() => {
@@ -21,42 +15,10 @@ function useGlobalStyles() {
             const style = document.createElement('style');
             style.id = id;
             style.textContent = `
-                input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; cursor: pointer; padding: 8px 0; }
-                input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 3px; background: #595959; border-radius: 9999px; }
-                input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: white; box-shadow: 0px 1px 3px rgba(0,0,0,0.5); margin-top: -5.5px; cursor: grab; }
-                input[type=range]::-webkit-slider-thumb:active { cursor: grabbing; }
-                .dark-scrollbar { scrollbar-width: thin; scrollbar-color: #595959 transparent; }
-                .dark-scrollbar::-webkit-scrollbar { width: 6px; }
-                .dark-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .dark-scrollbar::-webkit-scrollbar-thumb { background: #595959; border-radius: 9999px; }
-                @keyframes dropdown-enter { from { opacity: 0; transform: scale(0.95) translateY(-5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-                .animate-dropdown { animation: dropdown-enter 0.15s ease-out forwards; }
-                html, body, #root { margin: 0; padding: 0; width: 100%; height: 100%; background: #0e0e0e; font-family: 'Google Sans Text', 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.1px; -webkit-font-smoothing: antialiased; }
-
-                /* CapCut-style Effect Hover Previews */
-                @keyframes preview-blur-in { 0% { filter: blur(3px); opacity: 0; } 100% { filter: blur(0); opacity: 1; } }
-                @keyframes preview-scale-in { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-                @keyframes preview-slide-up { 0% { transform: translateY(6px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-                @keyframes preview-slide-down { 0% { transform: translateY(-6px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-                @keyframes preview-slide-left { 0% { transform: translateX(6px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
-                @keyframes preview-slide-right { 0% { transform: translateX(-6px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
-                @keyframes preview-rotate-in { 0% { transform: rotate(-180deg) scale(0.3); opacity: 0; } 100% { transform: rotate(0) scale(1); opacity: 1; } }
-                @keyframes preview-wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-                @keyframes preview-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-                @keyframes preview-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-                @keyframes preview-wiggle { 0%, 100% { transform: translate(0,0) rotate(0); } 25% { transform: translate(-1px,1px) rotate(-3deg); } 75% { transform: translate(1px,-1px) rotate(3deg); } }
-                
-                .effect-card:hover .preview-blur-in { animation: preview-blur-in 0.8s ease-out infinite; }
-                .effect-card:hover .preview-scale-in { animation: preview-scale-in 0.8s ease-out infinite; }
-                .effect-card:hover .preview-slide-up { animation: preview-slide-up 0.8s ease-out infinite; }
-                .effect-card:hover .preview-slide-down { animation: preview-slide-down 0.8s ease-out infinite; }
-                .effect-card:hover .preview-slide-left { animation: preview-slide-left 0.8s ease-out infinite; }
-                .effect-card:hover .preview-slide-right { animation: preview-slide-right 0.8s ease-out infinite; }
-                .effect-card:hover .preview-rotate-in { animation: preview-rotate-in 0.8s ease-out infinite; }
-                .effect-card:hover .preview-wave { animation: preview-wave 0.8s ease-in-out infinite; }
-                .effect-card:hover .preview-pulse { animation: preview-pulse 0.8s ease-in-out infinite; }
-                .effect-card:hover .preview-float { animation: preview-float 1.2s ease-in-out infinite; }
-                .effect-card:hover .preview-wiggle { animation: preview-wiggle 0.5s ease-in-out infinite; }
+                input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; cursor: pointer; padding: 6px 0; }
+                input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #444; border-radius: 9999px; }
+                input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: white; box-shadow: 0px 1px 4px rgba(0,0,0,0.6); margin-top: -6px; }
+                html, body, #root { margin: 0; padding: 0; width: 100%; height: 100%; height: 100dvh; background: #0e0e0e; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
             `;
             document.head.appendChild(style);
         }
@@ -78,18 +40,18 @@ export default function App() {
     const [bgMedia, setBgMedia] = useState<MediaAsset | null>(null);
     const [duration, setDuration] = useState(8);
     const [bgType, setBgType] = useState<'transparent' | 'solid' | 'gradient' | 'media'>('gradient');
-    const [bgColor1, setBgColor1] = useState<string>('#27272a');
+    const [bgColor1, setBgColor1] = useState<string>('#1a1a1e');
     const [bgColor2, setBgColor2] = useState<string>('#09090b');
     const [bgGradientAngle, setBgGradientAngle] = useState<number>(135);
     const [textConfigs, setTextConfigs] = useState<TextConfig[]>([
         {
             id: '1',
-            content: 'Type\nOverlays',
+            content: 'Text\nAnimator',
             fontFamily: "'Instrument Sans', sans-serif",
-            fontSize: 84,
-            fontWeight: 500,
+            fontSize: 64,
+            fontWeight: 700,
             letterSpacing: 0,
-            lineHeight: 1,
+            lineHeight: 1.1,
             textAlign: 'center',
             color: '#ffffff',
             backgroundColor: '#000000',
@@ -102,22 +64,22 @@ export default function App() {
             easing: 'smooth',
             speed: 1,
             stackTransition: 'blur',
-            duration: 2200,
-            delay: 140,
+            duration: 3500,
+            delay: 200,
             inDuration: 800,
             outDuration: 0,
             intensity: 50,
             inDirection: 'first',
             outDirection: 'first',
             shadowColor: '#000000',
-            shadowBlur: 0,
+            shadowBlur: 10,
             shadowAngle: 45,
-            shadowDistance: 0,
+            shadowDistance: 4,
             innerShadowColor: '#000000',
             innerShadowBlur: 0,
             innerShadowAngle: 45,
             innerShadowDistance: 0,
-            strokeColor: '#000050',
+            strokeColor: '#000000',
             strokeWidth: 0,
         }
     ]);
@@ -125,50 +87,15 @@ export default function App() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isRendering, setIsRendering] = useState(false);
     const [renderProgress, setRenderProgress] = useState(0);
-    const [exportAspectRatio, setExportAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('16:9');
+    const [exportAspectRatio, setExportAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('9:16');
     const [exportQuality, setExportQuality] = useState<'HD' | 'FullHD' | 'UHD'>('FullHD');
     const [exportFps, setExportFps] = useState<24 | 25 | 30 | 60>(30);
-    const [exportedMedia, setExportedMedia] = useState<{ dataUrl: string, mimeType: string } | null>(null);
+    const [exportedMedia, setExportedMedia] = useState<{ dataUrl: string, mimeType: string, fileName?: string } | null>(null);
+    const [showExportSettings, setShowExportSettings] = useState(false);
     const prevExportUrl = useRef<string | null>(null);
     const prevMediaUrl = useRef<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
-    const [key, setKey] = useState(0);
-
-    const [isPythonConnected, setIsPythonConnected] = useState(false);
-    const [showOfflineModal, setShowOfflineModal] = useState(false);
-    const wsRef = useRef<WebSocket | null>(null);
-
-    // Auto-reconnecting WebSocket listener for Python rendering server
-    useEffect(() => {
-        let ws: WebSocket | null = null;
-        let reconnectTimeout: ReturnType<typeof setTimeout>;
-
-        const connectWS = () => {
-            ws = new WebSocket('ws://localhost:8081');
-            ws.onopen = () => {
-                setIsPythonConnected(true);
-                wsRef.current = ws;
-            };
-            ws.onclose = () => {
-                setIsPythonConnected(false);
-                wsRef.current = null;
-                reconnectTimeout = setTimeout(connectWS, 2000); // Retry every 2 seconds
-            };
-            ws.onerror = () => {
-                if (ws) ws.close();
-            };
-        };
-
-        connectWS();
-
-        return () => {
-            if (ws) {
-                ws.onclose = null;
-                ws.close();
-            }
-            clearTimeout(reconnectTimeout);
-        };
-    }, []);
+    const [key] = useState(0);
 
     const handleDeleteLayer = useCallback((id: string) => {
         if (textConfigs.length <= 1) return;
@@ -180,20 +107,6 @@ export default function App() {
         setTextConfigs(prev => prev.filter(c => c.id !== id));
     }, [textConfigs, selectedTextId]);
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            const activeElement = document.activeElement;
-            const isInput = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA');
-            if (isInput) return;
-            if (e.key === ' ' || e.code === 'Space') {
-                e.preventDefault();
-                setIsPlaying(prev => !prev);
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
-
     const handleSelectMedia = async () => {
         try {
             const media = await Flow.media.select();
@@ -204,11 +117,12 @@ export default function App() {
                 if (prevMediaUrl.current) URL.revokeObjectURL(prevMediaUrl.current);
                 prevMediaUrl.current = blobUrl;
                 setBgMedia({ type: media.type, dataUrl: blobUrl, mimeType: media.mimeType });
+                setBgType('media');
                 setIsPlaying(true);
                 timeController.setTime(0);
             }
         } catch (err) {
-            console.error('Failed to select media', err);
+            console.error('Media tanlashda xatolik', err);
         }
     };
 
@@ -218,10 +132,10 @@ export default function App() {
         const newLayer: TextConfig = {
             ...(lastLayer || {
                 fontFamily: "'Instrument Sans', sans-serif",
-                fontSize: 84,
-                fontWeight: 500,
+                fontSize: 54,
+                fontWeight: 600,
                 letterSpacing: 0,
-                lineHeight: 1,
+                lineHeight: 1.1,
                 textAlign: 'center',
                 color: '#ffffff',
                 backgroundColor: '#000000',
@@ -237,28 +151,28 @@ export default function App() {
                 inDirection: 'first',
                 outDirection: 'first',
                 shadowColor: '#000000',
-                shadowBlur: 0,
+                shadowBlur: 8,
                 shadowAngle: 45,
-                shadowDistance: 0,
+                shadowDistance: 3,
                 innerShadowColor: '#000000',
                 innerShadowBlur: 0,
                 innerShadowAngle: 45,
                 innerShadowDistance: 0,
-                strokeColor: '#000050',
+                strokeColor: '#000000',
                 strokeWidth: 0,
             }),
             id: newId,
-            content: 'New Layer',
-            position: { x: 50, y: 50 },
-            delay: lastLayer ? lastLayer.delay + 500 : 0,
-            duration: 2200,
-            inDuration: 800,
+            content: 'Yangi Matn',
+            position: { x: 50, y: Math.min(80, (lastLayer ? lastLayer.position.y + 15 : 50)) },
+            delay: lastLayer ? Math.min(lastLayer.delay + 600, duration * 1000 - 1500) : 0,
+            duration: 2500,
+            inDuration: 700,
             outDuration: 0,
             intensity: 50,
         };
         setTextConfigs(prev => [...prev, newLayer]);
         setSelectedTextId(newId);
-    }, [textConfigs]);
+    }, [textConfigs, duration]);
 
     const handleMoveLayer = useCallback((id: string, direction: 'up' | 'down') => {
         setTextConfigs(prev => {
@@ -276,70 +190,36 @@ export default function App() {
 
     const handleExport = async () => {
         setIsPlaying(false);
-        if (isPythonConnected && wsRef.current) {
-            setIsRendering(true);
-            setRenderProgress(0);
-            const controller = new AbortController();
-            abortControllerRef.current = controller;
-            try {
-                const result = await renderVideoPython(
-                    wsRef.current,
-                    bgMedia, 
-                    textConfigs, 
-                    (p) => setRenderProgress(p), 
-                    { 
-                        aspectRatio: exportAspectRatio,
-                        quality: exportQuality,
-                        fps: exportFps,
-                        bgType,
-                        bgColor1,
-                        bgColor2,
-                        bgGradientAngle
-                    },
-                    controller.signal, 
-                    duration
-                );
-                if (prevExportUrl.current) URL.revokeObjectURL(prevExportUrl.current);
-                prevExportUrl.current = result.dataUrl;
-                setExportedMedia({ dataUrl: result.dataUrl, mimeType: result.mimeType });
-            } catch (err) {
-                console.error('Python render failed', err);
-            } finally {
-                setIsRendering(false);
-                abortControllerRef.current = null;
-            }
-        } else {
-            setShowOfflineModal(true);
-        }
-    };
-
-    const triggerBrowserFallbackExport = async () => {
-        setShowOfflineModal(false);
         setIsRendering(true);
         setRenderProgress(0);
         const controller = new AbortController();
         abortControllerRef.current = controller;
+
         try {
-            const result = await renderVideo(
-                bgMedia, 
-                textConfigs, 
-                (p) => setRenderProgress(p), 
-                { 
-                    resolution: exportQuality === 'UHD' ? '4K' : exportQuality === 'HD' ? '720p' : '1080p', 
+            const result = await renderVideoMobile(
+                bgMedia,
+                textConfigs,
+                (p) => setRenderProgress(p),
+                {
+                    aspectRatio: exportAspectRatio,
+                    quality: exportQuality,
                     fps: exportFps,
                     bgType,
                     bgColor1,
                     bgColor2,
                     bgGradientAngle
                 },
-                controller.signal, 
+                controller.signal,
                 duration
             );
+
             if (prevExportUrl.current) URL.revokeObjectURL(prevExportUrl.current);
             prevExportUrl.current = result.dataUrl;
-            setExportedMedia({ dataUrl: result.dataUrl, mimeType: result.mimeType });
-        } catch (err) {
-            console.error('Render failed', err);
+            setExportedMedia({ dataUrl: result.dataUrl, mimeType: result.mimeType, fileName: result.fileName });
+        } catch (err: any) {
+            if (err?.message !== "Render cancelled") {
+                console.error('Render xatosi', err);
+            }
         } finally {
             setIsRendering(false);
             abortControllerRef.current = null;
@@ -358,45 +238,110 @@ export default function App() {
         }));
     }, []);
 
-    const selectedConfig = textConfigs.find(c => c.id === selectedTextId) || null;
+    const selectedConfig = textConfigs.find(c => c.id === selectedTextId) || textConfigs[0] || null;
 
     return (
-        <div className="fixed inset-0 w-screen h-screen bg-[#0e0e0e] text-white flex overflow-hidden">
-            <div className="flex-1 flex flex-col p-8 lg:p-12 overflow-hidden">
-                <div className="flex-1 flex items-center justify-center relative mb-8 overflow-hidden">
-                    <Stage
-                        media={bgMedia}
-                        configs={textConfigs}
-                        selectedId={isRendering ? null : selectedTextId}
-                        isPlaying={isPlaying}
-                        animationKey={key}
-                        onUpdatePosition={(pos) => updateTextConfig({ position: pos })}
-                        onMetadataLoaded={(d) => setDuration(d)}
-                        onSelectLayer={setSelectedTextId}
-                        bgType={bgType}
-                        bgColor1={bgColor1}
-                        bgColor2={bgColor2}
-                        bgGradientAngle={bgGradientAngle}
-                        aspectRatio={exportAspectRatio}
-                    />
+        <div className="fixed inset-0 w-screen h-[100dvh] bg-[#0a0a0a] text-white flex flex-col overflow-hidden select-none">
+            {/* Top Navigation Bar */}
+            <div className="h-12 w-full bg-[#121212] border-b border-white/10 px-3 flex items-center justify-between shrink-0 z-20">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-base">🎬</span>
+                    <span className="text-[13px] font-bold tracking-tight text-white">Text Animator</span>
+                    <span className="text-[9px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1">PRO</span>
                 </div>
-                <div className="shrink-0 w-full max-w-5xl mx-auto px-6">
-                    <Timeline
-                        duration={duration}
-                        configs={textConfigs}
-                        selectedId={selectedTextId}
-                        isPlaying={isPlaying}
-                        onPlayPause={() => setIsPlaying(!isPlaying)}
-                        onRestart={() => timeController.setTime(0)}
-                        onSeek={(t) => timeController.setTime(t)}
-                        onUpdateConfig={updateTextConfig}
-                        onBatchUpdate={batchUpdateTextConfigs}
-                        onSelectLayer={setSelectedTextId}
-                    />
+
+                {/* Aspect Ratio Switcher */}
+                <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5">
+                    <button
+                        onClick={() => setExportAspectRatio('9:16')}
+                        type="button"
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-semibold transition-all ${
+                            exportAspectRatio === '9:16' ? 'bg-white text-black shadow' : 'text-white/60'
+                        }`}
+                        title="Vertikal (Shorts / Reels)"
+                    >
+                        9:16
+                    </button>
+                    <button
+                        onClick={() => setExportAspectRatio('16:9')}
+                        type="button"
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-semibold transition-all ${
+                            exportAspectRatio === '16:9' ? 'bg-white text-black shadow' : 'text-white/60'
+                        }`}
+                        title="Gorizontal (YouTube)"
+                    >
+                        16:9
+                    </button>
+                    <button
+                        onClick={() => setExportAspectRatio('1:1')}
+                        type="button"
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-semibold transition-all ${
+                            exportAspectRatio === '1:1' ? 'bg-white text-black shadow' : 'text-white/60'
+                        }`}
+                        title="Kvadrat (Post)"
+                    >
+                        1:1
+                    </button>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-1.5">
+                    <button
+                        onClick={handleAddLayer}
+                        type="button"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 text-white transition-all"
+                        title="Qatlam qo'shish"
+                    >
+                        <Plus size={16} />
+                    </button>
+                    <button
+                        onClick={() => setShowExportSettings(true)}
+                        type="button"
+                        className="h-7 px-2.5 rounded-lg bg-white text-black text-[11px] font-bold flex items-center gap-1 active:scale-95 shadow transition-all"
+                    >
+                        <Download size={13} />
+                        <span>Eksport</span>
+                    </button>
                 </div>
             </div>
 
-            <Sidebar
+            {/* Central Stage Canvas */}
+            <div className="flex-1 w-full min-h-0 relative flex items-center justify-center p-2 overflow-hidden bg-[#070707]">
+                <Stage
+                    media={bgMedia}
+                    configs={textConfigs}
+                    selectedId={isRendering ? null : selectedTextId}
+                    isPlaying={isPlaying}
+                    animationKey={key}
+                    onUpdatePosition={(pos) => updateTextConfig({ position: pos })}
+                    onMetadataLoaded={(d) => setDuration(d)}
+                    onSelectLayer={setSelectedTextId}
+                    bgType={bgType}
+                    bgColor1={bgColor1}
+                    bgColor2={bgColor2}
+                    bgGradientAngle={bgGradientAngle}
+                    aspectRatio={exportAspectRatio}
+                />
+            </div>
+
+            {/* Mobile Touch Timeline */}
+            <div className="w-full shrink-0 bg-[#0e0e0e] py-1 border-t border-white/5">
+                <Timeline
+                    duration={duration}
+                    configs={textConfigs}
+                    selectedId={selectedTextId}
+                    isPlaying={isPlaying}
+                    onPlayPause={() => setIsPlaying(!isPlaying)}
+                    onRestart={() => timeController.setTime(0)}
+                    onSeek={(t) => timeController.setTime(t)}
+                    onUpdateConfig={updateTextConfig}
+                    onBatchUpdate={batchUpdateTextConfigs}
+                    onSelectLayer={setSelectedTextId}
+                />
+            </div>
+
+            {/* Mobile Bottom Control Panel (Tabs & Settings) */}
+            <MobileBottomPanel
                 config={selectedConfig}
                 allConfigs={textConfigs}
                 onUpdate={updateTextConfig}
@@ -426,63 +371,145 @@ export default function App() {
                 onMoveLayer={handleMoveLayer}
                 duration={duration}
                 onDurationChange={setDuration}
-                isPythonConnected={isPythonConnected}
             />
 
-            {exportedMedia && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-8" onClick={() => setExportedMedia(null)}>
-                    <div className="bg-[#1a1a1a] border border-[#595959] rounded-2xl p-5 shadow-2xl max-w-2xl w-full flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-white/40 uppercase tracking-widest">Render Complete</span>
-                            <button onClick={() => setExportedMedia(null)} className="text-white/40 hover:text-white transition-colors">
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
+            {/* Render Progress Modal */}
+            {isRendering && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-6">
+                    <div className="bg-[#181818] border border-white/10 rounded-2xl p-6 shadow-2xl max-w-xs w-full flex flex-col items-center gap-4 text-center">
+                        <div className="relative w-16 h-16 flex items-center justify-center">
+                            <Loader2 className="w-14 h-14 text-white animate-spin opacity-80" />
+                            <span className="absolute text-[12px] font-bold font-mono">
+                                {Math.round(renderProgress * 100)}%
+                            </span>
                         </div>
-                        <div 
-                            className="rounded-xl overflow-hidden border border-[#595959] relative flex items-center justify-center min-h-[300px]"
-                            style={bgType === 'transparent' ? {
-                                backgroundImage: 'linear-gradient(45deg, #222 25%, transparent 25%), linear-gradient(-45deg, #222 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #222 75%), linear-gradient(-45deg, transparent 75%, #222 75%)',
-                                backgroundSize: '16px 16px',
-                                backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
-                                backgroundColor: '#111'
-                            } : { backgroundColor: '#000' }}
+                        <div className="space-y-1">
+                            <h4 className="text-[14px] font-bold text-white">Video Render Qilinmoqda</h4>
+                            <p className="text-[11px] text-white/50">Har bir kadr yuqori sifatda tayyorlanmoqda, iltimos kuting...</p>
+                        </div>
+                        <button
+                            onClick={() => abortControllerRef.current?.abort()}
+                            type="button"
+                            className="mt-2 text-[11px] text-red-400 hover:text-red-300 font-medium py-1 px-4 rounded-lg bg-red-500/10 border border-red-500/20 active:scale-95"
                         >
-                            <video src={exportedMedia.dataUrl} controls autoPlay loop className="max-h-[60vh] w-full z-10" />
-                        </div>
-                        <button onClick={() => setExportedMedia(null)} className="h-[34px] rounded-xl border border-[#595959] hover:bg-white/5 text-[12px] font-medium text-white transition-all">Close</button>
+                            Bekor qilish
+                        </button>
                     </div>
                 </div>
             )}
 
-            {showOfflineModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-8" onClick={() => setShowOfflineModal(false)}>
-                    <div className="bg-[#141414] border border-white/10 rounded-2xl p-6 shadow-2xl max-w-md w-full flex flex-col gap-5 text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500 animate-pulse">
-                                <span className="material-symbols-outlined text-2xl">warning</span>
+            {/* Export Settings Dialog */}
+            {showExportSettings && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowExportSettings(false)}>
+                    <div className="bg-[#181818] border border-white/10 rounded-2xl p-5 shadow-2xl max-w-sm w-full space-y-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                            <div className="flex items-center gap-2">
+                                <Film size={18} className="text-white" />
+                                <span className="text-[13px] font-bold text-white">Eksport Sozlamalari</span>
                             </div>
-                            <h3 style={{ fontFamily: 'Google Sans Flex' }} className="text-[15px] font-bold text-white tracking-wide">Python Render Server Oflayn</h3>
-                            <p className="text-[11px] text-white/50 leading-relaxed max-w-sm">
-                                Yuqori sifatli, silliq 60fps va shaffof (transparent) video render qilish uchun local kompyuteringizda Python serverini ishga tushiring:
-                            </p>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <span className="text-[9px] text-white/30 font-semibold uppercase tracking-widest text-left">Konsolda ishga tushirish buyrug'i:</span>
-                            <div className="bg-black/50 border border-white/5 rounded-xl p-3 font-mono text-[10px] text-emerald-400 select-all cursor-pointer break-all flex items-center justify-center gap-2 hover:bg-black/60 transition-colors" title="Nusxa olish uchun bosing">
-                                <span>pip install websockets && python hd_renderer.py</span>
-                            </div>
-                            <span className="text-[8px] text-white/25 italic">Nusxa olib, loyiha papkasida ishga tushiring. Tizimda FFmpeg o'rnatilgan bo'lishi kerak.</span>
-                        </div>
-
-                        <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
-                            <button onClick={triggerBrowserFallbackExport} className="h-[34px] w-full rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[11px] font-semibold text-white transition-all">
-                                Brauzer orqali render (Sifatsiz)
-                            </button>
-                            <button onClick={() => setShowOfflineModal(false)} className="h-[34px] w-full rounded-xl bg-white hover:bg-zinc-200 text-black text-[11px] font-bold transition-all">
-                                Tushunarli (Yopish)
+                            <button onClick={() => setShowExportSettings(false)} className="text-white/40 hover:text-white">
+                                <X size={18} />
                             </button>
                         </div>
+
+                        <div className="space-y-3">
+                            <div className="space-y-1">
+                                <span className="text-[11px] font-medium text-white/60">Ekran Nisbati (Aspect Ratio)</span>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {(['9:16', '16:9', '1:1'] as const).map(ratio => (
+                                        <button
+                                            key={ratio}
+                                            onClick={() => setExportAspectRatio(ratio)}
+                                            type="button"
+                                            className={`h-9 rounded-xl text-[11px] font-semibold border transition-all ${
+                                                exportAspectRatio === ratio ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/70'
+                                            }`}
+                                        >
+                                            {ratio}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <span className="text-[11px] font-medium text-white/60">Sifat (Quality)</span>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {(['HD', 'FullHD', 'UHD'] as const).map(q => (
+                                        <button
+                                            key={q}
+                                            onClick={() => setExportQuality(q)}
+                                            type="button"
+                                            className={`h-9 rounded-xl text-[11px] font-semibold border transition-all ${
+                                                exportQuality === q ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/70'
+                                            }`}
+                                        >
+                                            {q}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <span className="text-[11px] font-medium text-white/60">Kadrlar Tezligi (FPS)</span>
+                                <div className="grid grid-cols-4 gap-1.5">
+                                    {([24, 25, 30, 60] as const).map(f => (
+                                        <button
+                                            key={f}
+                                            onClick={() => setExportFps(f)}
+                                            type="button"
+                                            className={`h-9 rounded-xl text-[11px] font-semibold border transition-all ${
+                                                exportFps === f ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/70'
+                                            }`}
+                                        >
+                                            {f} FPS
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-2 flex flex-col gap-2">
+                            <button
+                                onClick={() => {
+                                    setShowExportSettings(false);
+                                    handleExport();
+                                }}
+                                type="button"
+                                className="w-full h-10 rounded-xl bg-white hover:bg-zinc-200 text-black text-[13px] font-bold shadow-lg flex items-center justify-center gap-2 active:scale-98 transition-all"
+                            >
+                                <Download size={16} />
+                                <span>Videoni Saqlash</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Export Complete Preview Modal */}
+            {exportedMedia && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4" onClick={() => setExportedMedia(null)}>
+                    <div className="bg-[#181818] border border-white/10 rounded-2xl p-4 shadow-2xl max-w-sm w-full flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-emerald-400">
+                                <Check size={16} />
+                                <span className="text-[12px] font-bold text-white">Video Tayyor!</span>
+                            </div>
+                            <button onClick={() => setExportedMedia(null)} className="text-white/40 hover:text-white">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="rounded-xl overflow-hidden border border-white/10 bg-black flex items-center justify-center max-h-[50vh]">
+                            <video src={exportedMedia.dataUrl} controls autoPlay loop className="max-h-[50vh] w-full" />
+                        </div>
+
+                        <button
+                            onClick={() => setExportedMedia(null)}
+                            type="button"
+                            className="w-full h-9 rounded-xl bg-white text-black text-[12px] font-bold active:scale-98 transition-all"
+                        >
+                            Yopish
+                        </button>
                     </div>
                 </div>
             )}

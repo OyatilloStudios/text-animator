@@ -39,7 +39,7 @@ export const Stage: React.FC<StageProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [mediaAspectRatio, setMediaAspectRatio] = useState(1920 / 1080);
+    const [, setMediaAspectRatio] = useState(1920 / 1080);
     const rafId = useRef<number>();
     const lastTime = useRef<number>(performance.now());
 
@@ -92,33 +92,51 @@ export const Stage: React.FC<StageProps> = ({
         return unsubscribe;
     }, [isPlaying, bgType]);
 
-    const handleMouseDown = (e: React.MouseEvent, id: string) => {
+    const handleSelectLayer = (e: React.MouseEvent | React.TouchEvent, id: string) => {
         e.stopPropagation();
         onSelectLayer(id);
         setIsDragging(true);
     };
 
+    // Unified drag handler for both Mouse and Touch
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!isDragging || !containerRef.current) return;
+        const updatePos = (clientX: number, clientY: number) => {
+            if (!containerRef.current) return;
             const rect = containerRef.current.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            const x = ((clientX - rect.left) / rect.width) * 100;
+            const y = ((clientY - rect.top) / rect.height) * 100;
             onUpdatePosition({
-                x: Math.max(0, Math.min(100, x)),
-                y: Math.max(0, Math.min(100, y))
+                x: Math.max(0, Math.min(100, Math.round(x * 10) / 10)),
+                y: Math.max(0, Math.min(100, Math.round(y * 10) / 10))
             });
         };
 
-        const handleMouseUp = () => setIsDragging(false);
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isDragging) return;
+            updatePos(e.clientX, e.clientY);
+        };
+
+        const handleTouchMove = (e: TouchEvent) => {
+            if (!isDragging || e.touches.length === 0) return;
+            e.preventDefault();
+            updatePos(e.touches[0].clientX, e.touches[0].clientY);
+        };
+
+        const handleDragEnd = () => setIsDragging(false);
 
         if (isDragging) {
             window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('mouseup', handleDragEnd);
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
+            window.addEventListener('touchend', handleDragEnd);
+            window.addEventListener('touchcancel', handleDragEnd);
         }
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('mouseup', handleDragEnd);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleDragEnd);
+            window.removeEventListener('touchcancel', handleDragEnd);
         };
     }, [isDragging, onUpdatePosition]);
 
@@ -141,23 +159,22 @@ export const Stage: React.FC<StageProps> = ({
     return (
         <div
             ref={containerRef}
-            className="relative shadow-2xl bg-black group overflow-hidden select-none border border-white/5 transition-all duration-500 ease-in-out rounded-xl"
+            className="relative shadow-2xl bg-black overflow-hidden select-none border border-white/10 transition-all duration-300 ease-in-out rounded-2xl flex items-center justify-center"
             style={{
                 aspectRatio: `${ratioValue}`,
-                ...(ratioValue > 1
-                    ? { width: '100%', height: 'auto', maxWidth: '100%', maxHeight: '100%' }
-                    : { height: '100%', width: 'auto', maxWidth: '100%', maxHeight: '100%' }),
-                flexShrink: 1,
-                minWidth: 0,
-                minHeight: 0
+                maxHeight: '100%',
+                maxWidth: '100%',
+                width: ratioValue < 1 ? 'auto' : '100%',
+                height: ratioValue < 1 ? '100%' : 'auto',
+                touchAction: 'none'
             }}
         >
             {/* Background Layer */}
             {bgType === 'transparent' ? (
                 <div className="w-full h-full bg-[#151515]" style={{
                     backgroundImage: 'linear-gradient(45deg, #0e0e0e 25%, transparent 25%), linear-gradient(-45deg, #0e0e0e 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #0e0e0e 75%), linear-gradient(-45deg, transparent 75%, #0e0e0e 75%)',
-                    backgroundSize: '20px 20px',
-                    backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                    backgroundSize: '16px 16px',
+                    backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px'
                 }} />
             ) : bgType === 'solid' ? (
                 <div className="w-full h-full transition-colors duration-300" style={{ backgroundColor: bgColor1 }} />
@@ -193,17 +210,17 @@ export const Stage: React.FC<StageProps> = ({
                     style={{ opacity: bgOpacity / 100 }}
                 />
 
-                {/* Text Layers rendered in direct array stacking order */}
+                {/* Text Layers */}
                 {configs.map((config, index) => {
                     const zIndex = (configs.length - index) + (selectedId === config.id ? 100 : 0);
                     return (
                         <AnimatedText
-                            key={config.id}
+                            key={`${config.id}-${animationKey}`}
                             config={config}
                             isPlaying={isPlaying}
                             animationKey={animationKey}
                             selectedId={selectedId}
-                            onSelectLayer={handleMouseDown}
+                            onSelectLayer={handleSelectLayer}
                             zIndex={zIndex}
                         />
                     );

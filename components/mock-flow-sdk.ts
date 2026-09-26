@@ -1,6 +1,6 @@
 /**
- * Browser-native fallback for flow-sdk to allow running the app locally.
- * Offers standard file picker for media selection and local file downloading for export.
+ * Browser-native & mobile fallback for flow-sdk to allow running the app locally and on Android.
+ * Offers standard file picker for media selection and local file downloading/sharing for export.
  */
 export const Flow = {
   media: {
@@ -48,8 +48,10 @@ export const Flow = {
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = params.name;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
     } catch (err) {
       console.warn("Local save failed", err);
     }

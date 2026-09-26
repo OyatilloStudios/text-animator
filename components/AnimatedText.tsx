@@ -8,7 +8,7 @@ interface AnimatedTextProps {
     isPlaying: boolean;
     animationKey: number;
     selectedId: string | null;
-    onSelectLayer: (e: React.MouseEvent, id: string) => void;
+    onSelectLayer: (e: React.MouseEvent | React.TouchEvent, id: string) => void;
     zIndex: number;
 }
 
@@ -195,49 +195,6 @@ function getExitAnimationProps(effect: string, outEase: any, outDur: number) {
     }
 }
 
-function getAnimParts(
-    h2: HTMLElement,
-    granularity: string,
-    root: HTMLElement,
-    effect: string
-): { parts: HTMLElement[] | null; splitter: any } {
-    if (granularity === 'line') {
-        const lineEls = root.querySelectorAll('.line-wrap');
-        return {
-            parts: lineEls.length > 0 ? Array.from(lineEls) as HTMLElement[] : null,
-            splitter: null
-        };
-    }
-
-    const needsClip = false; // Disables clip wrapping to prevent character descenders/caps cutting off
-    const splitKey = granularity === 'word' ? 'words' : 'chars';
-
-    const splitOpts: any = {};
-    if (splitKey === 'words') {
-        splitOpts.words = needsClip ? { wrap: 'clip' } : true;
-    } else {
-        splitOpts.chars = needsClip ? { wrap: 'clip' } : true;
-    }
-
-    const splitter = splitText(h2, splitOpts);
-    const parts = splitter[splitKey as 'chars' | 'words'];
-    return {
-        parts: (parts && parts.length > 0) ? Array.from(parts) as HTMLElement[] : null,
-        splitter
-    };
-}
-
-function computeStagger(n: number, inDur: number, granularity: string) {
-    const perDur = Math.min(
-        granularity === 'line' ? Math.max(200, inDur * 0.5)
-        : granularity === 'char' ? Math.max(80, inDur * 0.3)
-        : Math.max(150, inDur * 0.4),
-        inDur
-    );
-    const sd = n > 1 ? Math.max(0, (inDur - perDur) / (n - 1)) : 0;
-    return { perDur, sd };
-}
-
 interface RichToken {
     text: string;
     color?: string;
@@ -261,6 +218,17 @@ function parseRichText(text: string): RichToken[] {
     return tokens;
 }
 
+function computeStagger(n: number, inDur: number, granularity: string) {
+    const perDur = Math.min(
+        granularity === 'line' ? Math.max(200, inDur * 0.5)
+        : granularity === 'char' ? Math.max(80, inDur * 0.3)
+        : Math.max(150, inDur * 0.4),
+        inDur
+    );
+    const sd = n > 1 ? Math.max(0, (inDur - perDur) / (n - 1)) : 0;
+    return { perDur, sd };
+}
+
 const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying, animationKey, selectedId, onSelectLayer, zIndex }) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -272,13 +240,11 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
     configRef.current = config;
 
     const styles = useMemo(() => {
-        // Drop Shadow offset calculation
         const shadowAngleRad = ((config.shadowAngle || 0) * Math.PI) / 180;
         const shadowX = Math.cos(shadowAngleRad) * (config.shadowDistance || 0);
         const shadowY = Math.sin(shadowAngleRad) * (config.shadowDistance || 0);
         const dropShadowCSS = config.shadowColor ? `${shadowX}px ${shadowY}px ${config.shadowBlur || 0}px ${config.shadowColor}` : '';
 
-        // Inner Shadow offset calculation (simulated via multiple compatible text-shadows)
         const innerAngleRad = ((config.innerShadowAngle || 0) * Math.PI) / 180;
         const innerX = Math.cos(innerAngleRad) * (config.innerShadowDistance || 0);
         const innerY = Math.sin(innerAngleRad) * (config.innerShadowDistance || 0);
@@ -288,7 +254,6 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
 
         const textShadow = [dropShadowCSS, innerShadowCSS].filter(Boolean).join(', ') || undefined;
 
-        // Stroke (Outline)
         const textStroke = config.strokeWidth && config.strokeColor 
             ? `${config.strokeWidth}px ${config.strokeColor}` 
             : undefined;
@@ -312,7 +277,6 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
         config.strokeColor, config.strokeWidth
     ]);
 
-    // Build animation
     useEffect(() => {
         if (!rootRef.current) return;
 
@@ -324,13 +288,11 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
         const isKinetic = config.loopEffect && config.loopEffect !== 'none';
         const isStackLayout = config.effect === 'sequential-stack';
 
-        // Reset
         kineticPartsRef.current = [];
         kineticTypeRef.current = null;
         kineticLineIndicesRef.current = [];
         timelineRef.current = null;
 
-        // === HTML Generation ===
         if (isStackLayout) {
             let segments: string[];
             if (granularity === 'char') {
@@ -382,7 +344,7 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
                         return `<span class="anim-wrapper" style="display: inline-block; white-space: pre;"><span class="kinetic-target" style="display: inline-block;">${innerHTML}</span></span>`;
                     }).join('<span style="display: inline-block; white-space: pre;"> </span>');
                 }).join('<br/>');
-            } else if (granularity === 'char') { // 'char'
+            } else if (granularity === 'char') {
                 const lines = content.split('\n');
                 html = lines.map(line => {
                     const tokens = parseRichText(line);
@@ -397,7 +359,7 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
                         }).join('');
                     }).join('');
                 }).join('<br/>');
-            } else { // 'all'
+            } else {
                 const tokens = parseRichText(content);
                 const innerHTML = tokens.map(token => {
                     const colorStyle = token.color ? `style="color: ${token.color};"` : '';
@@ -424,7 +386,6 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
             applyStyles(h2);
         }
 
-        // Determine transition parts
         let parts: HTMLElement[] = [];
         if (isStackLayout) {
             parts = Array.from(rootRef.current.querySelectorAll('.stack-item')) as HTMLElement[];
@@ -432,7 +393,6 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
             parts = Array.from(rootRef.current.querySelectorAll('.anim-wrapper')) as HTMLElement[];
         }
 
-        // === Kinetic loops: store refs, no timeline ===
         if (isKinetic) {
             kineticTypeRef.current = config.loopEffect;
             kineticPartsRef.current = Array.from(rootRef.current.querySelectorAll('.kinetic-target')) as HTMLElement[];
@@ -457,7 +417,6 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
         }
 
         if (config.effect === 'none' && (!config.outEffect || config.outEffect === 'none')) {
-            // Instantly visible if no transitions are active
             const tl = createTimeline({ autoplay: false });
             tl.add(parts, { opacity: [1, 1], duration: 1 }, config.delay);
             timelineRef.current = tl;
@@ -465,7 +424,6 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
             return;
         }
 
-        // === Timeline-based effects (Transitions) ===
         const tl = createTimeline({ autoplay: false });
         const inDur = config.inDuration * speedMul;
         const outDur = config.outDuration * speedMul;
@@ -493,7 +451,6 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
                 const n = parts.length;
                 const { perDur, sd } = computeStagger(n, inDur, granularity);
 
-                // 1. Entrance Transition
                 if (config.effect !== 'none') {
                     if (config.effect === 'typewriter') {
                         const stepDur = 1;
@@ -504,11 +461,9 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
                         tl.add(parts, { ...entryProps, delay: stagger(sd, { from: config.inDirection || 'first' }) }, inStart);
                     }
                 } else {
-                    // Instantly visible
                     tl.add(parts, { opacity: [1, 1], duration: 1 }, inStart);
                 }
- 
-                // 2. Exit Transition
+
                 if (config.outEffect && config.outEffect !== 'none' && outDur > 0) {
                     const { perDur: od, sd: osd } = computeStagger(n, outDur, granularity);
                     if (config.outEffect === 'typewriter') {
@@ -531,14 +486,12 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
         };
     }, [config.content, config.effect, config.outEffect, config.loopEffect, config.granularity, config.easing, config.speed, config.stackTransition, config.inDuration, config.outDuration, config.delay, config.duration, config.intensity, config.lineHeight, config.fontSize, config.fontFamily, config.fontWeight, config.letterSpacing, config.color, config.textAlign, config.inDirection, config.outDirection, config.shadowColor, config.shadowBlur, config.shadowAngle, config.shadowDistance, config.innerShadowColor, config.innerShadowBlur, config.innerShadowAngle, config.innerShadowDistance, config.strokeColor, config.strokeWidth, animationKey]);
 
-    // Time subscription
     useEffect(() => {
         const update = (time: number) => {
             const c = configRef.current;
             const timeMs = time * 1000;
             if (timelineRef.current) timelineRef.current.seek(timeMs);
 
-            // Kinetic per-frame loop computation
             const kType = kineticTypeRef.current;
             if (kType && kineticPartsRef.current.length > 0) {
                 const localTime = timeMs - c.delay;
@@ -558,11 +511,16 @@ const AnimatedTextComponent: React.FC<AnimatedTextProps> = ({ config, isPlaying,
         return unsubscribe;
     }, [config.delay, config.duration]);
 
+    const handleSelect = (e: React.MouseEvent | React.TouchEvent) => {
+        onSelectLayer(e, config.id);
+    };
+
     return (
         <div
             ref={containerRef}
-            onMouseDown={(e) => onSelectLayer(e, config.id)}
-            className="absolute cursor-move active:cursor-grabbing p-2 transition-shadow"
+            onMouseDown={handleSelect}
+            onTouchStart={handleSelect}
+            className={`absolute cursor-move active:cursor-grabbing p-2 transition-shadow ${selectedId === config.id ? 'ring-1 ring-white/40 rounded-lg' : ''}`}
             style={{
                 left: `${config.position.x}%`,
                 top: `${config.position.y}%`,

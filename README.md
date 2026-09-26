@@ -1,70 +1,62 @@
-# ✨ Text Animator PRO
+# 📱 Text Animator PRO — Mobile & Android (APK)
 
-A native desktop application & offline video renderer for creating kinetic text animations and motion graphics in real-time.
+A modern mobile web & native Android application for creating kinetic text animations, motion graphics, and video rendering directly on smart devices.
 
 ---
 
-## 🏗 Arxitektura (Architecture)
+## 🏗 Arxitektura (Mobile Architecture)
 
-Loyiha ikki asosiy qismdan tashkil topgan:
+Loyiha smartfonlar va Android operatsion tizimi uchun to'liq moslashtirilgan:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                   React + TypeScript                     │
-│  - UI: Stage, Timeline, Effects, Sidebar, Primitives     │
-│  - Engine: Anime.js, html-to-image, Mediabunny           │
-│  - Canvas: Real-time kinetic preview & frame capture     │
+│             React + TypeScript + Capacitor               │
+│  - UI: Mobile Stage (9:16 / 16:9 / 1:1), Touch Timeline  │
+│  - Navigation: CapCut-style 6-tab Mobile Bottom Panel    │
+│  - Touch Engine: Finger Drag & Scrubbing                 │
+│  - Motion Engine: Anime.js (30+ kinetic animations)      │
+│  - Renderer: In-Device WebCodecs (MP4 & WebM)            │
 └────────────────────────────┬─────────────────────────────┘
-                             │ WebSocket (ws://localhost:8081)
+                             │ Build
 ┌────────────────────────────▼─────────────────────────────┐
-│                 Python Native Backend                    │
-│  - Launcher: PyWebView (Native desktop window)          │
-│  - Server: Deno/Vite local dev server & static server    │
-│  - Offline Renderer: FFmpeg with GPU acceleration       │
-│    (NVENC / Intel QSV / AMD AMF / CPU fallback)          │
+│                 Android Native (.APK)                    │
+│  - Capacitor Native Bridge                               │
+│  - In-device Gallery Export                              │
+│  - Cloud CI/CD (GitHub Actions — 0MB on local PC)        │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📁 Loyiha tuzilishi
+## 📁 Loyiha Tuzilishi
 
-- `App.tsx` — Asosiy dastur interfeysi va state boshqaruvi
-- `components/` — UI komponentlari (`Stage`, `Timeline`, `EffectPicker`, `Sidebar`, `AnimatedText`, `Primitives`)
-- `services/` — Vaqt boshqaruvi (`TimeController.ts`) va render xizmati (`renderer.ts`)
-- `hd_renderer.py` — Python ishga tushiruvchi, WebSocket server va FFmpeg offline video rendereri
-- `build_dist.py` — Dasturni to'liq mustaqil (standalone `.exe`) dastur qilib yig'ish skripti
-- `package.json` / `deno.json` — Frontend bog'liqliklari (dependencies)
+- `App.tsx` — Mobil interfeys, 9:16 standart vertikal format, yuqori menyu va eksport oynasi
+- `components/Stage.tsx` — Sensor ekran (Touch Drag) orqali matnlarni erkin surish sahnasi
+- `components/Timeline.tsx` — Barmoq bilan vaqtni surish (Touch Scrubbing) va qatlamlarni cho'zish
+- `components/MobileBottomPanel.tsx` — CapCut uslubidagi 6 ta mobil boshqaruv bo'limi:
+  - ✏️ **Matn** — Shriftlar, o'lcham, qalinlik, tekislash, tezkor joylashuv
+  - 🎨 **Uslub** — Rang, fon shaffofligi, hoshiya (stroke), tashqi va ichki soyalar
+  - ✨ **Effekt** — 30+ kinetik, kirish va chiqish animatsiyalari
+  - ⏱️ **Vaqt** — Qatlam davomiyligi, boshlanish vaqti, tezlik va intensivlik
+  - 🖼️ **Fon** — Gradient, rangli, shaffof yoki media fon
+  - ⚙️ **Qatlam** — Qatlamlarni tartiblash va boshqarish
+- `components/AnimatedText.tsx` — Anime.js kinetik dvigateli
+- `services/renderer.ts` — Telefonda to'g'ridan-to'g'ri MP4 render qiluvchi WebCodecs mexanizmi
+- `capacitor.config.json` — Android konfiguratsiyasi
+- `.github/workflows/build-apk.yml` — GitHub Actions orqali bulutda avtomatik APK yig'ish
 
 ---
 
-## 🚀 O'rnatish va Ishga tushirish
+## 🚀 Qanday Qilib APK Olinadi? (GitHub Actions orqali)
 
-### 1. Talablar:
-- **Node.js** (yoki **Deno**)
-- **Python 3.10+**
-- **FFmpeg** (tizimda o'rnatilgan yoki `ffmpeg.exe` fayli)
+Ushbu loyiha kompyuteringiz xotirasidan **0 MB** sarflagan holda GitHub bulutida avtomatik `.apk` chiqarib beradi:
 
-### 2. Bog'liqliklarni o'rnatish:
-```bash
-# Frontend paketlarini o'rnatish
-npm install
-
-# Python paketlarini o'rnatish
-pip install pywebview websockets
-```
-
-### 3. Dasturni ishga tushirish:
-```bash
-# Desktop dastur sifatida (Python orqali):
-python hd_renderer.py
-
-# Yoki brauzerda ishlab chiqish uchun (Vite dev):
-npm run dev
-```
-
-### 4. Standalone (.exe) dastur yaratish:
-```bash
-python build_dist.py
-```
-Natijada `dist/TextAnimator/` papkasida mustaqil ishlaydigan tayyor dastur hosil bo'ladi.
+1. Ushbu loyihani GitHub omboriga push qiling:
+   ```bash
+   git push origin main
+   ```
+2. GitHub sahifangizga kiring: [https://github.com/OyatilloStudios/text-animator](https://github.com/OyatilloStudios/text-animator)
+3. Yuqoridagi **"Actions"** tabiga bosing.
+4. **"Build Android APK (Cloud - 0MB Disk on PC)"** ishlayotganini ko'rasiz.
+5. Jarayon tugagach (taxminan 2 daqiqa), **"Artifacts"** bo'limida tayyor **`TextAnimator-PRO-Android-APK`** fayli paydo bo'ladi.
+6. Uni to'g'ridan-to'g'ri telefoningizga yuklab olib, o'rnatasiz!

@@ -1,0 +1,8 @@
+{
+  "appId": "uz.oyatillo.textanimator",
+  "appName": "Text Animator PRO",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
